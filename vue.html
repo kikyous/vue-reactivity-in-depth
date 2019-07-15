@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vue 响应式原理</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      img { max-width: 100%; height: auto;}
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Vue 响应式原理
+
+
+![Alt text](https://vuejs.org/images/logo.png)
+
+---
+
+# Example
+
+```html
+<div id="example">{{message}}</div>
+```
+
+```js
+var vm = new Vue({
+  el: '#example',
+  data: {
+    message: 'Hello Vue!'
+  }
+})
+```
+
+???
+
+<https://cn.vuejs.org/v2/guide/#声明式渲染>
+
+---
+
+# Watch
+
+```js
+var vm = new Vue({
+  el: '#demo',
+  data: {
+    message: 'Hello Vue!'
+  }
+  watch: {
+    message: function (val) {
+      console.log(val)
+    },
+  }
+})
+```
+
+---
+
+# vm.$watch( expOrFn, callback, [options] )
+
+```js
+// keypath
+vm.$watch('a.b.c', function (newVal, oldVal) {
+  // do something
+})
+```
+
+---
+```js
+// function
+vm.$watch(
+  function () {
+    // every time the expression `this.a + this.b` yields a different result,
+    // the handler will be called. It's as if we were watching a computed
+    // property without defining the computed property itself
+    return this.a + this.b
+  },
+  function (newVal, oldVal) {
+    // do something
+  }
+)
+```
+
+---
+
+# Watcher
+
+```js
+export default class Watcher {
+  constructor(
+    vm: Component,
+    expOrFn: string | Function,
+    cb: Function,
+    options?: ?Object,
+    isRenderWatcher?: boolean
+  )
+}
+```
+
+---
+
+# Object.defineProperty()
+
+```js
+let data = { price: 5, quantity: 2 }
+
+Object.defineProperty(data, 'price', {  // For just the price property
+
+    get() {  // Create a get method
+      console.log(`I was accessed`)
+    },
+    
+    set(newVal) {  // Create a set method
+      console.log(`I was changed`)
+    }
+})
+data.price // This calls get()
+data.price = 20  // This calls set()
+```
+
+---
+
+## watcher1 = vm.$watch(...)
+
+```js
+  function () {
+    return this.a + this.b
+  },
+```
+
+* this.a
+  * wacther1
+
+* this.b
+  * wacther1
+
+
+---
+
+## watcher2 = vm.$watch(...)
+
+```js
+  function () {
+    return this.b
+  },
+```
+
+* this.a
+  * wacther1
+
+* this.b
+  * wacther1
+  * wacther2
+---
+
+class: center, middle
+# 依赖收集
+
+---
+
+![Alt text](https://vuejs.org/images/data.png)
+
+
+---
+
+```js
+  Vue.prototype._mount = function (
+    el?: Element | void,
+    hydrating?: boolean
+  ): Component {
+    const vm: Component = this
+
+    // 在Vue实例对象上添加 $el 属性，指向挂载点元素
+    vm.$el = el
+
+    // 触发 beforeMount 生命周期钩子
+    callHook(vm, 'beforeMount')
+
+    vm._watcher = new Watcher(vm, () => {
+      vm._update(vm._render(), hydrating)
+    }, noop)
+
+    // 如果是第一次mount则触发 mounted 生命周期钩子
+    if (vm.$vnode == null) {
+      vm._isMounted = true
+      callHook(vm, 'mounted')
+    }
+    return vm
+  }
+```
+
+---
+
+# 模板编译 Vue.compile
+
+```html
+<div>
+{{message}}
+</div>
+```
+```js
+function anonymous(
+) {
+  with(this){return _c('div',[_v("\n"+_s(message)+"\n")])}
+}
+```
+
+???
+https://cn.vuejs.org/v2/guide/render-function.html#模板编译
+
+---
+
+class: center, middle
+# 感谢
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
