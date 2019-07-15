@@ -212,6 +212,15 @@ vm.$watch(Date.now, function(){
 
 ---
 
+# vm watcher
+
+```js
+  vm._watcher = new Watcher(vm, () => {
+    vm._update(vm._render(), hydrating)
+  }, noop)
+```
+---
+
 # 模板编译 Vue.compile
 
 ```html
